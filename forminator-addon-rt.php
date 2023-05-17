@@ -25,11 +25,11 @@ function forminator_addon_rt_dir() {
 
 add_action( 'forminator_addons_loaded', 'load_forminator_addon_rt' );
 function load_forminator_addon_rt() {
-	require_once dirname( __FILE__ ) . '/includes/forminator-addon-rt.php';
+  require_once dirname( __FILE__ ) . '/includes/forminator-addon-rt.php';
   require_once dirname( __FILE__ ) . '/includes/forminator-addon-rt-form-settings.php';
   require_once dirname( __FILE__ ) . '/includes/forminator-addon-rt-form-hooks.php';
-	if ( class_exists( 'Forminator_Addon_Loader' ) ) {
-		Forminator_Addon_Loader::get_instance()->register( 'Forminator_Addon_Rt' );
-	}
+  if ( class_exists( 'Forminator_Addon_Loader' ) ) {
+    Forminator_Addon_Loader::get_instance()->register( 'Forminator_Addon_Rt' );
+  }
 }
 
