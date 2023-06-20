@@ -56,6 +56,7 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
       $data = [
         'Subject' => $ticket_subject,
         'Content' => $this->rt_api->formToContent( $submitted_form ),
+        'Requestor' =>  $this->form_settings_instance->get_requestor_email( $submitted_form )
       ];
       $r = $this->rt_api->createTicket($data);
       if ( is_wp_error($r) ) {

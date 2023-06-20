@@ -6,9 +6,6 @@ require_once dirname( __FILE__ ) . '/forminator-addon-rt-exception.php';
 final class Forminator_Addon_Rt extends Forminator_Addon_Abstract {
 
 	private static $_instance = null;
-	/**
-	 * Use this trait to mark this addon as PRO
-	 */
 	protected $_slug = 'rt';
 	protected $_version = FORMINATOR_ADDON_RT_VERSION;
 	protected $_min_forminator_version = '1.1';
