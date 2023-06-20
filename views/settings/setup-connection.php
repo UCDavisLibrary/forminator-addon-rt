@@ -3,6 +3,8 @@
 $vars = array(
 	'error_message'       => '',
 	'rt_host'           => '',
+  'rt_host_set_by_env' => false,
+  'rt_secret_set_by_env' => false,
 	'rt_secret'       => '',
 	'rt_secret' => '',
 	'rt_host_error'     => '',
@@ -56,7 +58,13 @@ foreach ( $template_vars as $key => $val ) {
 		<input
 				class="sui-form-control"
 				name="rt_host" placeholder="<?php echo esc_attr( __( 'https://yourRtServer.com', 'forminator' ) ); ?>"
+        <?php if ( $vars['rt_host_set_by_env'] ) : ?>
+          disabled
+        <?php endif; ?>
 				value="<?php echo esc_attr( $vars['rt_host'] ); ?>">
+    <?php if ( $vars['rt_host_set_by_env'] ) : ?>
+      <span class="sui-error-message">This input is disabled because it is being set by an environmental variable.</span>
+    <?php endif; ?>
 		<?php if ( ! empty( $vars['rt_host_error'] ) ) : ?>
 			<span class="sui-error-message"><?php echo esc_html( $vars['rt_host_error'] ); ?></span>
 		<?php endif; ?>
@@ -67,7 +75,13 @@ foreach ( $template_vars as $key => $val ) {
 		<input
 				class="sui-form-control"
 				name="rt_secret" placeholder="<?php echo esc_attr( __( 'A secret API Key', 'forminator' ) ); ?>"
+        <?php if ( $vars['rt_secret_set_by_env'] ) : ?>
+          disabled
+        <?php endif; ?>
 				value="<?php echo esc_attr( $vars['rt_secret'] ); ?>">
+    <?php if ( $vars['rt_secret_set_by_env'] ) : ?>
+      <span class="sui-error-message">This input is disabled because it is being set by an environmental variable.</span>
+    <?php endif; ?>
 		<?php if ( ! empty( $vars['rt_secret_error'] ) ) : ?>
 			<span class="sui-error-message"><?php echo esc_html( $vars['rt_secret_error'] ); ?></span>
 		<?php endif; ?>

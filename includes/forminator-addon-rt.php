@@ -188,6 +188,8 @@ final class Forminator_Addon_Rt extends Forminator_Addon_Abstract {
 			'rt_secret'         => '',
 			'rt_secret_error'   => '',
 			'error_message'       => '',
+      'rt_host_set_by_env' => $this->get_env_rt_host() ? true : false,
+      'rt_secret_set_by_env' => $this->get_env_rt_secret() ? true : false,
       'is_active' => $this->is_active() ? 'active' : 'not active',
 		);
 
@@ -237,8 +239,12 @@ final class Forminator_Addon_Rt extends Forminator_Addon_Abstract {
 					if ( $this->get_rt_host() !== $rt_host || $this->get_rt_secret() !== $rt_secret ) {
 						$settings_values = array();
 					}
-					$settings_values['rt_host'] = $rt_host;
-					$settings_values['rt_secret'] = $rt_secret;
+          if ( !$this->get_env_rt_host() ) {
+            $settings_values['rt_host'] = $rt_host;
+          }
+          if ( !$this->get_env_rt_secret() ) {
+            $settings_values['rt_secret'] = $rt_secret;
+          }
           $settings_values['queues_selected'] = $this->get_queues_selected();
 
 					$this->save_settings_values( $settings_values );
@@ -351,8 +357,12 @@ final class Forminator_Addon_Rt extends Forminator_Addon_Abstract {
             }
           }
 					$settings_values['queues_selected'] = $queues_to_set;
-          $settings_values['rt_host'] = $rt_host;
-          $settings_values['rt_secret'] = $rt_secret;
+          if ( !$this->get_env_rt_host() ) {
+            $settings_values['rt_host'] = $rt_host;
+          }
+          if ( !$this->get_env_rt_secret() ) {
+            $settings_values['rt_secret'] = $rt_secret;
+          }
 
 					$this->save_settings_values( $settings_values );
 
@@ -426,18 +436,27 @@ final class Forminator_Addon_Rt extends Forminator_Addon_Abstract {
 	 * @return string
 	 */
 	public function get_rt_host() {
-		$settings_values = $this->get_settings_values();
+    $env_host = $this->get_env_rt_host();
 		$rt_host = '';
-		if ( isset( $settings_values ['rt_host'] ) ) {
-			$rt_host = $settings_values ['rt_host'];
-		} else {
-      $settings = $this->get_rt_settings();
-      if ( isset( $settings['rt_host'] ) ) {
-				$rt_host = $settings['rt_host'];
-			}
+    if ( $env_host ) {
+      $rt_host = $env_host;
+    } else {
+      $settings_values = $this->get_settings_values();
+      if ( isset( $settings_values ['rt_host'] ) ) {
+        $rt_host = $settings_values ['rt_host'];
+      } else {
+        $settings = $this->get_rt_settings();
+        if ( isset( $settings['rt_host'] ) ) {
+          $rt_host = $settings['rt_host'];
+        }
+    }
     }
 		return $rt_host;
 	}
+
+  public function get_env_rt_host(){
+    return getenv('FORMINATOR_ADDON_RT_HOST');
+  }
 
   /**
 	 * Get RT secret
@@ -446,18 +465,28 @@ final class Forminator_Addon_Rt extends Forminator_Addon_Abstract {
 	 * @return string
 	 */
 	public function get_rt_secret() {
-		$settings_values = $this->get_settings_values();
+    $env_secret = $this->get_env_rt_secret();
 		$rt_secret = '';
-		if ( isset( $settings_values ['rt_secret'] ) ) {
-			$rt_secret = $settings_values ['rt_secret'];
-		} else {
-      $settings = $this->get_rt_settings();
-      if ( isset( $settings['rt_secret'] ) ) {
-				$rt_secret = $settings['rt_secret'];
-			}
+    if ( $env_secret ) {
+      $rt_secret = $env_secret;
+    } else {
+      $settings_values = $this->get_settings_values();
+      if ( isset( $settings_values ['rt_secret'] ) ) {
+        $rt_secret = $settings_values ['rt_secret'];
+      } else {
+        $settings = $this->get_rt_settings();
+        if ( isset( $settings['rt_secret'] ) ) {
+          $rt_secret = $settings['rt_secret'];
+        }
+      }
     }
+
 		return $rt_secret;
 	}
+
+  public function get_env_rt_secret(){
+    return getenv('FORMINATOR_ADDON_RT_SECRET');
+  }
 
   public function get_queues_selected($justIds = false){
     $settings_values = $this->get_settings_values();
