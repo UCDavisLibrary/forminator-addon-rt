@@ -31,6 +31,7 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
     $form = $this->custom_form;
     $form_fields = $this->form_settings_instance->get_form_fields();
     $is_success = true;
+    set_transient( 'forminator_addon_rt_form_submitted_data', $submitted_data);
 
     // combine submitted data with form fields
     $submitted_form = [];
@@ -42,16 +43,23 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
       // todo: figure this out. The slack addon does some special handingling of postdata fields
       if ( stripos( $field_type, 'postdata' ) !== false ) continue;
 
-      $field_value = forminator_addon_replace_custom_vars( '{' . $element_id . '}', $submitted_data, $this->custom_form, [], false );
+      if ( self::element_is_calculation( $element_id ) ) {
+        $formula = forminator_addon_replace_custom_vars( $form_field['formula'], $submitted_data, $this->custom_form, [], false );
+        $field_value = eval( "return {$formula};");
+      } else {
+        $field_value = forminator_addon_replace_custom_vars( '{' . $element_id . '}', $submitted_data, $this->custom_form, [], false );
+      }
       $submitted_form[] = [
         'element_id' => $element_id,
         'field_type' => $field_type,
         'field_label' => $field_label,
         'field_value' => $field_value,
+        'field_object' => $form_field
       ];
     }
 
     try {
+      set_transient( 'forminator_addon_rt_form_submit', $submitted_form );
       $ticket_subject = "New Submission from {$form->name}";
       $data = [
         'Subject' => $ticket_subject,
@@ -78,15 +86,31 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
     return $is_success;
   }
 
-  public function add_entry_fields( $submitted_data ) {
+  /**
+   * @description - Fires after a form is submitted and RT ticket is created.
+   * We use this to add the RT ticket id to the entry meta data.
+   * And to send any uploads as a separate as attachments in an comment to RT ticket.
+   * Not ideal, but I couldn't figure out how to do it from the submission hook.
+   */
+  public function add_entry_fields( $submitted_data, $form_entry_fields = array(), $entry = null ) {
     $out = [];
+
+    // Save RT ticket id to entry meta data
     $lastTicket = $this->rt_api->getLastTicketCreated();
-    if ( !empty($lastTicket) ){
+    if ( empty($lastTicket) ){
+      return $out;
+    } else {
       $out[] = [
         'name'  => 'rt_ticket',
         'value' => $lastTicket,
       ];
     }
+
+    $uploads = $this->get_uploads( $form_entry_fields );
+    if ( !count( $uploads ) ) {
+      return $out;
+    }
+    $upload_status = $this->handle_uploads( $uploads );
     return $out;
   }
 
@@ -168,4 +192,51 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
     return $export_columns;
 
   }
+
+  private function handle_uploads($uploads){
+    // convert urls to file paths
+    $upload_paths = [];
+    $upload_dir = wp_upload_dir();
+    foreach ( $uploads as $url ) {
+      $upload_paths[] = str_replace( $upload_dir['baseurl'], $upload_dir['basedir'], $url );
+    }
+    set_transient( 'forminator_addon_rt_form_upload_paths', $upload_paths );
+    /**
+     * Hey Steve,
+     *
+     * Pick up here when you are back from vacation.
+     * You will want to:
+     * - check if the uploads are files that exist
+     * - base64 encode the files
+     * - send them to RT as attachments in a comment
+     * - If the attachments arent there, or base64 encoding fails, then send urls in comment
+     * - If sending comment fails, then make a new entry in the form entry.
+     * - in fact, make a new entry for any status.
+     */
+  }
+
+	/**
+	 * Get uploads to be added as attachments
+	 */
+	private function get_uploads( $fields ) {
+		$uploads = array();
+
+		foreach ( $fields as $i => $val ) {
+			if ( 0 === stripos( $val['name'], 'upload-' ) ) {
+				if ( ! empty( $val['value'] ) ) {
+					$file_url = $val['value']['file']['file_url'];
+
+					if ( is_array( $file_url ) ) {
+						foreach ( $file_url as $url ) {
+							$uploads[] = $url;
+						}
+					} else {
+						$uploads[] = $file_url;
+					}
+				}
+			}
+		}
+
+		return $uploads;
+	}
 }

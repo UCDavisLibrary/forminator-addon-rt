@@ -76,7 +76,16 @@ class Forminator_Addon_Rt_Api {
   public function formToContent($submitted_data){
     $content = '';
     foreach($submitted_data as $field){
-      $content .= "<b>{$field['field_label']}</b>: {$field['field_value']}<br>";
+      $block_label = false;
+      if ( $field['field_type'] == 'textarea' ){
+        $field['field_value'] = nl2br($field['field_value']);
+        $block_label = true;
+      } else if ( $field['field_type'] == 'upload') {
+        continue;
+      }
+      $content .= "<b>{$field['field_label']}</b>: ";
+      if ( $block_label ) $content .= "<br>";
+      $content .= "{$field['field_value']}<br>";
     }
     return $content;
 
