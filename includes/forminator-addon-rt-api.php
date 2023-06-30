@@ -13,10 +13,15 @@ class Forminator_Addon_Rt_Api {
     $this->secret = $secret;
     $this->path = 'REST/2.0';
     $this->_ticketCreationResponses = [];
+    $this->_commentCreationResponses = [];
   }
 
   public function postTicketUrl(){
     return $this->host . $this->path . '/ticket';
+  }
+
+  public function postCommentUrl($id){
+    return trailingslashit($this->postTicketUrl()) . $id . '/comment';
   }
 
   public function createTicket($data=[]){
@@ -36,6 +41,27 @@ class Forminator_Addon_Rt_Api {
       ]
     );
     $this->_ticketCreationResponses[] = $r;
+    return $r;
+  }
+
+  public function createComment($ticket_id, $data ){
+
+    if ( !array_key_exists('ContentType', $data) || empty($data['ContentType']) ) {
+      $data['ContentType'] = 'text/html';
+    }
+
+    $r = wp_remote_post(
+      $this->postCommentUrl($ticket_id),
+      ['headers' => ['Authorization' => 'token ' . $this->secret, 'Content-Type' => 'application/json' ],
+       'body' => wp_json_encode($data),
+       'blocking'    => true,
+       'data_format' => 'body'
+      ]
+    );
+    if ( !isset($this->_commentCreationResponses[$ticket_id]) ) {
+      $this->_commentCreationResponses[$ticket_id] = [];
+    }
+    $this->_commentCreationResponses[$ticket_id][] = $r;
     return $r;
   }
 
@@ -89,5 +115,26 @@ class Forminator_Addon_Rt_Api {
     }
     return $content;
 
+  }
+
+  public function formatFailedAttachments($uploads){
+    $content = 'Failed to attach the following files to the ticket:<br><ul>';
+    foreach($uploads as $upload){
+      $content .= "<li>{$upload['url']}</li>";
+    }
+    $content .= '</ul>';
+    return $content;
+  }
+
+  public function responseIsSuccess($r, $code=201){
+    $is_success = true;
+    if ( is_wp_error($r) ) {
+      $is_success = false;
+      forminator_addon_maybe_log( __METHOD__, $r->get_error_message() );
+    } else if(wp_remote_retrieve_response_code($r) != $code){
+      $is_success = false;
+      forminator_addon_maybe_log( __METHOD__, wp_remote_retrieve_response_message($r) );
+    }
+    return $is_success;
   }
 }

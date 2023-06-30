@@ -31,7 +31,6 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
     $form = $this->custom_form;
     $form_fields = $this->form_settings_instance->get_form_fields();
     $is_success = true;
-    set_transient( 'forminator_addon_rt_form_submitted_data', $submitted_data);
 
     // combine submitted data with form fields
     $submitted_form = [];
@@ -59,7 +58,6 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
     }
 
     try {
-      set_transient( 'forminator_addon_rt_form_submit', $submitted_form );
       $ticket_subject = "New Submission from {$form->name}";
       $data = [
         'Subject' => $ticket_subject,
@@ -67,13 +65,7 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
         'Requestor' =>  $this->form_settings_instance->get_requestor_email( $submitted_form )
       ];
       $r = $this->rt_api->createTicket($data);
-      if ( is_wp_error($r) ) {
-        $is_success = false;
-        forminator_addon_maybe_log( __METHOD__, $r->get_error_message() );
-      } else if(wp_remote_retrieve_response_code($r) != 201){
-        $is_success = false;
-        forminator_addon_maybe_log( __METHOD__, wp_remote_retrieve_response_message($r) );
-      }
+      $is_success = $this->rt_api->responseIsSuccess($r, 201);
       json_decode(wp_remote_retrieve_body($r), true);
     } catch (\Throwable $th) {
       $is_success = false;
@@ -94,23 +86,32 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
    */
   public function add_entry_fields( $submitted_data, $form_entry_fields = array(), $entry = null ) {
     $out = [];
+    $entry_field = [
+      'name'  => 'rt_ticket',
+      'value' => '',
+    ];
 
     // Save RT ticket id to entry meta data
     $lastTicket = $this->rt_api->getLastTicketCreated();
     if ( empty($lastTicket) ){
       return $out;
     } else {
-      $out[] = [
-        'name'  => 'rt_ticket',
-        'value' => $lastTicket,
-      ];
+      $entry_field['value'] = $lastTicket;
     }
 
     $uploads = $this->get_uploads( $form_entry_fields );
     if ( !count( $uploads ) ) {
+      $out[] = $entry_field;
       return $out;
     }
-    $upload_status = $this->handle_uploads( $uploads );
+    $upload_status = $this->handle_uploads( $uploads, $lastTicket );
+    foreach ($upload_status['uploads'] as &$upload) {
+      if ( isset($upload['file']) ) {
+        unset($upload['file']);
+      }
+    }
+    $entry_field['value']['uploadStatus'] = $upload_status;
+    $out[] = $entry_field;
     return $out;
   }
 
@@ -153,6 +154,13 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
         }
 
       }
+      if ( isset( $ticket['uploadStatus']['commentCreated']) ){
+        $uploadStatus = $ticket['uploadStatus'];
+        $sub_entries[] = array(
+          'label' => __( 'Comment With Form Attachments', 'forminator' ),
+          'value' => $uploadStatus['commentCreated'] ? 'Sent' : 'Failed',
+        );
+      }
       if ( count( $sub_entries ) ) {
         $additional_entry_item['sub_entries'] = $sub_entries;
         $entry_items[] = $additional_entry_item;
@@ -193,26 +201,99 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
 
   }
 
-  private function handle_uploads($uploads){
-    // convert urls to file paths
-    $upload_paths = [];
+  /**
+   * @description - Send any uploads as attachments in a comment to RT ticket.
+   * @param $upload_urls - array of upload urls from form_entry_fields
+   * @param $lastTicket - RT ticket response created from form submission
+   */
+  private function handle_uploads($upload_urls, $lastTicket){
+
+    $out = [
+      'error' => false,
+      'commentCreated' => false,
+      'uploads' => []
+    ];
+
+    $uploads = [];
+    $attachments = [];
     $upload_dir = wp_upload_dir();
-    foreach ( $uploads as $url ) {
-      $upload_paths[] = str_replace( $upload_dir['baseurl'], $upload_dir['basedir'], $url );
+
+    foreach ( $upload_urls as $url ) {
+      $path = str_replace( $upload_dir['baseurl'], $upload_dir['basedir'], $url );
+      $upload = [
+        'url' => $url,
+        'path' => $path,
+        'file_exists' => false,
+        'file_read' => false,
+        'mime_type' => false,
+        'attached' => false
+      ];
+
+      // check if file exists
+      if ( ! file_exists( $path ) ) {
+        $out['error'] = true;
+        $uploads[] = $upload;
+        continue;
+      }
+      $upload['file_exists'] = true;
+
+      // read file
+      $file = file_get_contents( $path );
+      if ( $file === false ) {
+        $out['error'] = true;
+        continue;
+      }
+      $upload['file_read'] = true;
+      $upload['file'] = base64_encode( $file );
+
+      // get mime type
+      $mime_type = mime_content_type( $path );
+      if ( $mime_type === false ) {
+        $out['error'] = true;
+        continue;
+      }
+      $upload['mime_type'] = $mime_type;
+
+      // add to attachments array to send to RT
+      $attachments[] = [
+        'FileName' => basename( $path ),
+        'FileType' => $upload['mime_type'],
+        'FileContent' => $upload['file']
+      ];
+      $upload['attached'] = true;
+      $uploads[] = $upload;
     }
-    set_transient( 'forminator_addon_rt_form_upload_paths', $upload_paths );
-    /**
-     * Hey Steve,
-     *
-     * Pick up here when you are back from vacation.
-     * You will want to:
-     * - check if the uploads are files that exist
-     * - base64 encode the files
-     * - send them to RT as attachments in a comment
-     * - If the attachments arent there, or base64 encoding fails, then send urls in comment
-     * - If sending comment fails, then make a new entry in the form entry.
-     * - in fact, make a new entry for any status.
-     */
+    $out['uploads'] = $uploads;
+
+    // send attachments to RT
+    $rt_payload = [
+      'Subject' => 'Submission Attachments',
+      'Attachments' => $attachments
+    ];
+    if ( $out['error'] ){
+      $rt_payload['Content'] = $this->rt_api->formatFailedAttachments( array_filter( $uploads, function($upload){
+        return !$upload['attached'];
+      }));
+      $rt_payload['ContentType'] = 'text/html';
+    }
+    $r = $this->rt_api->createComment( $lastTicket['id'], $rt_payload );
+    $is_success = $this->rt_api->responseIsSuccess($r, 201);
+    if ( $is_success ) {
+      $out['commentCreated'] = true;
+      return $out;
+    }
+
+    // failed to create comment
+    // try sending again without attachments
+    $out['error'] = true;
+    $rt_payload['Content'] = $this->rt_api->formatFailedAttachments($uploads);
+    $rt_payload['ContentType'] = 'text/html';
+    $r = $this->rt_api->createComment( $lastTicket['id'], $rt_payload );
+    $is_success = $this->rt_api->responseIsSuccess($r, 201);
+    if ( $is_success ) {
+      $out['commentCreated'] = true;
+    }
+    return $out;
   }
 
 	/**

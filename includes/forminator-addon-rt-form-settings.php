@@ -145,7 +145,6 @@ class Forminator_Addon_Rt_Form_Settings extends Forminator_Addon_Form_Settings_A
    * @description Get the email address of the RT requestor for this form submission.
    */
   public function get_requestor_email($submitted_form=null){
-    set_transient('rt_submitted_data', $submitted_form);
     $settings = $this->get_form_settings_values();
     $email = '';
     if ( !array_key_exists('requestor', $settings) || empty($settings['requestor']) ){
