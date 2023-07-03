@@ -30,6 +30,8 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
 		$form_id = $this->form_id;
     $form = $this->custom_form;
     $form_fields = $this->form_settings_instance->get_form_fields();
+    set_transient( 'forminator_addon_rt_form_submit', $submitted_data);
+    set_transient( 'forminator_addon_rt_form_fields', $form_fields);
     $is_success = true;
 
     // combine submitted data with form fields
@@ -39,7 +41,8 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
 			$field_type  = $form_field['type'];
 			$field_label = $form_field['field_label'];
 
-      // todo: figure this out. The slack addon does some special handingling of postdata fields
+      // The postdata field type is used to create wordpress posts from form submissions.
+      // We have no current use case for this functionality, so we will skip it until needed.
       if ( stripos( $field_type, 'postdata' ) !== false ) continue;
 
       if ( self::element_is_calculation( $element_id ) ) {
@@ -55,6 +58,18 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
         'field_value' => $field_value,
         'field_object' => $form_field
       ];
+      while ( true ) {
+        $next_field = $this->find_next_grouped_field($submitted_data, $form_field);
+        if ( $next_field === null ) break;
+        $next_field_number = $this->next_form_field[$element_id] - 1;
+        $submitted_form[] = [
+          'element_id' => $element_id . '-' . $next_field_number,
+          'field_type' => $field_type,
+          'field_label' => $field_label . ' (' . $next_field_number . ')',
+          'field_value' => $next_field,
+          'field_object' => $form_field
+        ];
+      }
     }
 
     try {
@@ -76,6 +91,25 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
     }
 
     return $is_success;
+  }
+
+  /**
+   * @description - Find the next field in the form that is grouped with the given field, if any.
+   * Is auto-incremented by 1 in the field id suffix
+   */
+  private function find_next_grouped_field($submitted_data, $form_field){
+    $next_field_num = 2;
+    if ( !isset($this->next_form_field) ){
+      $this->next_form_field = [];
+    } elseif ( isset($this->next_form_field[$form_field['element_id']]) ){
+      $next_field_num = $this->next_form_field[$form_field['element_id']];
+    }
+    $next_field_id = $form_field['element_id'] . '-' . $next_field_num;
+    if ( isset($submitted_data[$next_field_id]) ){
+      $this->next_form_field[$form_field['element_id']] = $next_field_num + 1;
+      return forminator_addon_replace_custom_vars($submitted_data[$next_field_id], $submitted_data, $this->custom_form, [], false );
+    }
+    return null;
   }
 
   /**
