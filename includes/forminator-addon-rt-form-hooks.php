@@ -22,6 +22,7 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
     $form_settings = $this->form_settings_instance->get_form_settings_values();
     $queue = $form_settings['queue'];
     $this->rt_api = $this->addon->get_api($rt_host, $rt_secret, $queue);
+    $this->form_settings = $form_settings;
 
 	}
 
@@ -30,8 +31,6 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
 		$form_id = $this->form_id;
     $form = $this->custom_form;
     $form_fields = $this->form_settings_instance->get_form_fields();
-    set_transient( 'forminator_addon_rt_form_submit', $submitted_data);
-    set_transient( 'forminator_addon_rt_form_fields', $form_fields);
     $is_success = true;
 
     // combine submitted data with form fields
@@ -73,7 +72,8 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
     }
 
     try {
-      $ticket_subject = "New Submission from {$form->name}";
+      $has_custom_subject = isset($this->form_settings['subject']) && !empty($this->form_settings['subject']);
+      $ticket_subject = $has_custom_subject ? forminator_addon_replace_custom_vars( $this->form_settings['subject'], $submitted_data, $this->custom_form, [], false ) : "New Submission from {$form->name}";
       $data = [
         'Subject' => $ticket_subject,
         'Content' => $this->rt_api->formToContent( $submitted_form ),

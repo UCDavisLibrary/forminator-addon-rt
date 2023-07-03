@@ -2,6 +2,7 @@
   // defaults.
   $vars = array(
     'error_message' => [],
+    'subject' => '',
     'requestor' => '',
     'requestor_options' => [
       'wp-user' => 'Logged In WordPress User',
@@ -32,6 +33,13 @@
 
 
 <form>
+  <div class="sui-form-field">
+		<label class="sui-label"><?php esc_html_e( 'Subject', 'forminator' ); ?></label>
+    <input
+      class="sui-form-control"
+      name="subject" placeholder="<?php echo esc_attr( __( 'Ticket Subject', 'forminator' ) ); ?>"
+      value="<?php echo esc_attr( $vars['subject'] ); ?>">
+	</div>
   <div class="sui-form-field">
 		<label class="sui-label"><?php esc_html_e( 'Requestor', 'forminator' ); ?></label>
 		<select class="sui-select" name="requestor">

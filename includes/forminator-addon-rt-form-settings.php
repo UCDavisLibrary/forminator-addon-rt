@@ -90,7 +90,8 @@ class Forminator_Addon_Rt_Form_Settings extends Forminator_Addon_Form_Settings_A
     $buttons = [];
     $is_close = false;
     $template_params = array(
-      'requestor' => isset( $settings['requestor'] ) ? $settings['requestor'] : 'wp-user'
+      'requestor' => isset( $settings['requestor'] ) ? $settings['requestor'] : 'wp-user',
+      'subject' => isset( $settings['subject'] ) ? $settings['subject'] : ''
     );
 
     if ( $is_submit ) {
@@ -99,6 +100,7 @@ class Forminator_Addon_Rt_Form_Settings extends Forminator_Addon_Form_Settings_A
           $settings,
           array(
             'requestor' => $submitted_data['requestor'],
+            'subject' => $submitted_data['subject']
           )
         )
       );
@@ -125,7 +127,8 @@ class Forminator_Addon_Rt_Form_Settings extends Forminator_Addon_Form_Settings_A
 
   public function metadata_is_completed(){
     $settings = $this->get_form_settings_values();
-    return array_key_exists('requestor', $settings) && !empty($settings['requestor']);
+    $has_requestor = array_key_exists('requestor', $settings) && !empty($settings['requestor']);
+    return $has_requestor;
   }
 
   public function is_form_settings_complete(){
