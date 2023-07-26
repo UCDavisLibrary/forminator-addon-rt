@@ -99,7 +99,10 @@ class Forminator_Addon_Rt_Api {
 
   }
 
-  public function formToContent($submitted_data){
+  public function formToContent($submitted_data, $prepend_data=[]){
+    if ( !is_array($submitted_data) ) return '';
+    if ( !is_array($prepend_data) ) $prepend_data = [];
+    $submitted_data = array_merge($prepend_data, $submitted_data);
     $content = '';
     foreach($submitted_data as $field){
       $block_label = false;

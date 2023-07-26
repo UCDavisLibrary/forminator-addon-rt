@@ -12,7 +12,9 @@
     'custom_fields' => [[
       'rt_field_name' => '',
       'form_field_id' => ''
-    ]]
+    ]],
+    'body_fields_ip' => 0,
+    'body_fields_user_agent' => 0
 );
   foreach ( $template_vars as $key => $val ) {
     if ( $key === 'error_message' && ! is_array( $val ) ) {
@@ -96,5 +98,30 @@
       });
     </script>
 	</div>
+  <div class="sui-form-field">
+		<label class="sui-label"><?php esc_html_e( 'Additional RT Body Fields', 'forminator' ); ?></label>
+    <div style="margin-bottom:.5rem;">
+      <label class="sui-toggle">
+        <input type="checkbox"
+        name="body-fields-ip"
+        id="body-fields-ip"
+        value="1"
+        <?php checked( 1, $vars['body_fields_ip'] ); ?>>
+        <span class="sui-toggle-slider"></span>
+        <span class="sui-toggle-label" for="body-fields-ip"><?php esc_html_e( 'Submitter IP Address', 'forminator' ); ?></span>
+      </label>
+    </div>
+    <div style="margin-bottom:.5rem;">
+      <label class="sui-toggle">
+        <input type="checkbox"
+        name="body-fields-user-agent"
+        id="body-fields-user-agent"
+        value="1"
+        <?php checked( 1, $vars['body_fields_user_agent'] ); ?>>
+        <span class="sui-toggle-slider"></span>
+        <span class="sui-toggle-label" for="body-fields-user-agent"><?php esc_html_e( 'Submitter User Agent', 'forminator' ); ?></span>
+      </label>
+    </div>
+  </div>
 
 </form>

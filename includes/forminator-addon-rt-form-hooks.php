@@ -88,11 +88,30 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
     }
 
     try {
+      # ticket subject
       $has_custom_subject = isset($this->form_settings['subject']) && !empty($this->form_settings['subject']);
       $ticket_subject = $has_custom_subject ? forminator_addon_replace_custom_vars( $this->form_settings['subject'], $submitted_data, $this->custom_form, [], false ) : "New Submission from {$form->name}";
+
+      # additional body content
+      $additional_body_content = [];
+      if ( isset($this->form_settings['body_fields_ip']) && $this->form_settings['body_fields_ip'] == '1' ){
+        $additional_body_content[] = [
+          'field_label' => 'IP Address',
+          'field_value' => isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '',
+          'field_type' => 'text'
+        ];
+      }
+      if ( isset($this->form_settings['body_fields_user_agent']) && $this->form_settings['body_fields_user_agent'] == '1' ){
+        $additional_body_content[] = [
+          'field_label' => 'User Agent',
+          'field_value' => isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '',
+          'field_type' => 'text'
+        ];
+      }
+
       $data = [
         'Subject' => $ticket_subject,
-        'Content' => $this->rt_api->formToContent( $submitted_form ),
+        'Content' => $this->rt_api->formToContent( $submitted_form, $additional_body_content ),
         'Requestor' =>  $this->form_settings_instance->get_requestor_email( $submitted_form )
       ];
       if ( count($custom_fields) ){
