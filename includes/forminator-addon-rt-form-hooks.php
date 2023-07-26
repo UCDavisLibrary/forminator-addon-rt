@@ -33,6 +33,17 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
     $form_fields = $this->form_settings_instance->get_form_fields();
     $is_success = true;
 
+    // get custom fields
+    $custom_field_registry = [];
+    $custom_fields = [];
+    if ( isset($this->form_settings['custom_fields']) && is_array($this->form_settings['custom_fields']) ) {
+      foreach ( $this->form_settings['custom_fields'] as $field ) {
+        if ( !empty($field['rt_field_name']) && !empty($field['form_field_id']) ){
+          $custom_field_registry[$field['form_field_id']] = $field['rt_field_name'];
+        }
+      }
+    }
+
     // combine submitted data with form fields
     $submitted_form = [];
     foreach ( $form_fields as $form_field ) {
@@ -57,6 +68,11 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
         'field_value' => $field_value,
         'field_object' => $form_field
       ];
+
+      if ( !empty($custom_field_registry[$element_id]) ){
+        $custom_fields[$custom_field_registry[$element_id]] = $field_value;
+      }
+
       while ( true ) {
         $next_field = $this->find_next_grouped_field($submitted_data, $form_field);
         if ( $next_field === null ) break;
@@ -79,6 +95,9 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
         'Content' => $this->rt_api->formToContent( $submitted_form ),
         'Requestor' =>  $this->form_settings_instance->get_requestor_email( $submitted_form )
       ];
+      if ( count($custom_fields) ){
+        $data['CustomFields'] = $custom_fields;
+      }
       $r = $this->rt_api->createTicket($data);
       $is_success = $this->rt_api->responseIsSuccess($r, 201);
       json_decode(wp_remote_retrieve_body($r), true);

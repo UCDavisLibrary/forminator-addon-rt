@@ -93,14 +93,42 @@ class Forminator_Addon_Rt_Form_Settings extends Forminator_Addon_Form_Settings_A
       'requestor' => isset( $settings['requestor'] ) ? $settings['requestor'] : 'wp-user',
       'subject' => isset( $settings['subject'] ) ? $settings['subject'] : ''
     );
+    $custom_fields = [];
+    if ( isset( $settings['custom_fields'] ) && is_array( $settings['custom_fields'] ) ) {
+      foreach ( $settings['custom_fields'] as $field ) {
+        $custom_fields[] = array(
+          'rt_field_name' => isset( $field['rt_field_name'] ) ? $field['rt_field_name'] : '',
+          'form_field_id' => isset( $field['form_field_id'] ) ? $field['form_field_id'] : ''
+        );
+      }
+    }
+    if ( count($custom_fields) ){
+      $template_params['custom_fields'] = $custom_fields;
+    }
 
     if ( $is_submit ) {
+      $custom_fields = [];
+      if ( $submitted_data['custom-field-name'] && $submitted_data['custom-field-value'] ){
+        $name = is_array($submitted_data['custom-field-name']) ? $submitted_data['custom-field-name'] : [$submitted_data['custom-field-name']];
+        $value = is_array($submitted_data['custom-field-value']) ? $submitted_data['custom-field-value'] : [$submitted_data['custom-field-value']];
+        $zippedFields = array_map(null, $name, $value);
+        foreach ( $zippedFields as $field ) {
+          if ( count($field) != 2 ){
+            continue;
+          }
+          $custom_fields[] = array(
+            'rt_field_name' => $field[0],
+            'form_field_id' => $field[1]
+          );
+        }
+      }
       $this->save_form_settings_values(
         array_merge(
           $settings,
           array(
             'requestor' => $submitted_data['requestor'],
-            'subject' => $submitted_data['subject']
+            'subject' => $submitted_data['subject'],
+            'custom_fields' => $custom_fields
           )
         )
       );
