@@ -95,8 +95,7 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
       # additional body content
       $additional_body_content = [];
       if ( isset($this->form_settings['body_fields_ip']) && $this->form_settings['body_fields_ip'] == '1' ){
-        $ip_address = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
-        $ip_address = isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $ip_address;
+        $ip_address = Forminator_Geo::get_user_ip();
         $additional_body_content[] = [
           'field_label' => 'IP Address',
           'field_value' => $ip_address,
