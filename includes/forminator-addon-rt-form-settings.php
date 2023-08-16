@@ -93,7 +93,8 @@ class Forminator_Addon_Rt_Form_Settings extends Forminator_Addon_Form_Settings_A
       'requestor' => isset( $settings['requestor'] ) ? $settings['requestor'] : 'wp-user',
       'subject' => isset( $settings['subject'] ) ? $settings['subject'] : '',
       'body_fields_ip' => isset( $settings['body_fields_ip'] ) &&  $settings['body_fields_ip'] == '1' ? 1 : 0,
-      'body_fields_user_agent' => isset( $settings['body_fields_user_agent'] ) && $settings['body_fields_user_agent'] == '1' ? 1 : 0
+      'body_fields_user_agent' => isset( $settings['body_fields_user_agent'] ) && $settings['body_fields_user_agent'] == '1' ? 1 : 0,
+      'body_fields_user_name' => isset( $settings['body_fields_user_name'] ) && $settings['body_fields_user_name'] == '1' ? 1 : 0
     );
     $custom_fields = [];
     if ( isset( $settings['custom_fields'] ) && is_array( $settings['custom_fields'] ) ) {
@@ -132,7 +133,8 @@ class Forminator_Addon_Rt_Form_Settings extends Forminator_Addon_Form_Settings_A
             'subject' => $submitted_data['subject'],
             'custom_fields' => $custom_fields,
             'body_fields_ip' => isset( $submitted_data['body-fields-ip'] ) ? 1 : 0,
-            'body_fields_user_agent' => isset( $submitted_data['body-fields-user-agent'] ) ? 1 : 0
+            'body_fields_user_agent' => isset( $submitted_data['body-fields-user-agent'] ) ? 1 : 0,
+            'body_fields_user_name' => isset( $submitted_data['body-fields-user-name'] ) ? 1 : 0
           )
         )
       );

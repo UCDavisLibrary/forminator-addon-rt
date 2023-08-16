@@ -14,7 +14,8 @@
       'form_field_id' => ''
     ]],
     'body_fields_ip' => 0,
-    'body_fields_user_agent' => 0
+    'body_fields_user_agent' => 0,
+    'body_fields_user_name' => 0
 );
   foreach ( $template_vars as $key => $val ) {
     if ( $key === 'error_message' && ! is_array( $val ) ) {
@@ -120,6 +121,17 @@
         <?php checked( 1, $vars['body_fields_user_agent'] ); ?>>
         <span class="sui-toggle-slider"></span>
         <span class="sui-toggle-label" for="body-fields-user-agent"><?php esc_html_e( 'Submitter User Agent', 'forminator' ); ?></span>
+      </label>
+    </div>
+    <div style="margin-bottom:.5rem;">
+      <label class="sui-toggle">
+        <input type="checkbox"
+        name="body-fields-user-name"
+        id="body-fields-user-name"
+        value="1"
+        <?php checked( 1, $vars['body_fields_user_name'] ); ?>>
+        <span class="sui-toggle-slider"></span>
+        <span class="sui-toggle-label" for="body-fields-user-name"><?php esc_html_e( 'Logged In User Name', 'forminator' ); ?></span>
       </label>
     </div>
   </div>

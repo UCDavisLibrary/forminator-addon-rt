@@ -109,6 +109,18 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
           'field_type' => 'text'
         ];
       }
+      if (
+        isset($this->form_settings['body_fields_user_name']) &&
+        $this->form_settings['body_fields_user_name'] == '1' &&
+        is_user_logged_in()
+        ){
+        $user = wp_get_current_user();
+        $additional_body_content[] = [
+          'field_label' => 'Submitter Name',
+          'field_value' => $user->display_name,
+          'field_type' => 'text'
+        ];
+      }
 
       $data = [
         'Subject' => $ticket_subject,
