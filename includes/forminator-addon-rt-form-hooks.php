@@ -20,7 +20,7 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
     $rt_host = $this->addon->get_rt_host();
     $rt_secret= $this->addon->get_rt_secret();
     $form_settings = $this->form_settings_instance->get_form_settings_values();
-    $queue = $form_settings['queue'];
+    $queue = isset($form_settings['queue']) ? $form_settings['queue'] : '';
     $this->rt_api = $this->addon->get_api($rt_host, $rt_secret, $queue);
     $this->form_settings = $form_settings;
 
