@@ -6,6 +6,7 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
 
   public $rt_api;
   public $form_settings;
+  public $next_form_field;
 
   /**
 	 * Forminator_Addon_Rt_Form_Hooks constructor.
