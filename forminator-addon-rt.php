@@ -3,13 +3,13 @@
  * Plugin Name: Forminator Addon: Request Tracker (RT)
  * Plugin URI: https://github.com/UCDavisLibrary/forminator-addon-rt
  * Description: Create tickets in Request Tracker (RT) when a Forminator form is submitted.
- * Version: 1.1.1
+ * Version: 1.2.0
  * Author: UC Davis Library Online Strategy
  * Author URI: https://library.ucdavis.edu/
  */
 
 
-define( 'FORMINATOR_ADDON_RT_VERSION', '1.1.1' );
+define( 'FORMINATOR_ADDON_RT_VERSION', '1.2.0' );
 
 function forminator_addon_rt_url() {
 	return trailingslashit( plugin_dir_url( __FILE__ ) );

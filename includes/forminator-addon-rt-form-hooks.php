@@ -3,6 +3,10 @@
 require_once dirname( __FILE__ ) . '/forminator-addon-rt-api.php';
 
 class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstract {
+
+  public $rt_api;
+  public $form_settings;
+
   /**
 	 * Forminator_Addon_Rt_Form_Hooks constructor.
 	 *
@@ -129,6 +133,12 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
       ];
       if ( count($custom_fields) ){
         $data['CustomFields'] = $custom_fields;
+      }
+      $data = apply_filters( 'forminator_addon_rt_ticket_data', $data, $this->custom_form, $submitted_form );
+      if ( is_string($data) ){
+        return $data;
+      } else if ( !is_array($data) ){
+        return $this->_submit_form_error_message;
       }
       $r = $this->rt_api->createTicket($data);
       $is_success = $this->rt_api->responseIsSuccess($r, 201);

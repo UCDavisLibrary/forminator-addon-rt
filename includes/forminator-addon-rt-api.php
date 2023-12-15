@@ -7,6 +7,13 @@
  */
 class Forminator_Addon_Rt_Api {
 
+  public $host;
+  public $secret;
+  public $defaultQueue;
+  public $path;
+  public $_ticketCreationResponses;
+  public $_commentCreationResponses;
+
   public function __construct($host, $secret, $defaultQueue=''){
     $this->host = trailingslashit($host);
     $this->defaultQueue = $defaultQueue;
