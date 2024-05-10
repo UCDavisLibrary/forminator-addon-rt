@@ -3,12 +3,7 @@
 /**
  * @description Displays wizard for setting up RT integration for a given form.
  */
-class Forminator_Addon_Rt_Form_Settings extends Forminator_Addon_Form_Settings_Abstract {
-  protected $addon;
-
-  public function __construct( Forminator_Addon_Abstract $addon, $form_id ) {
-    parent::__construct( $addon, $form_id );
-  }
+class Forminator_Rt_Form_Settings extends Forminator_Integration_Form_Settings {
 
   /**
    * @description Set what displays in the form settings modal and in what order.

@@ -3,7 +3,7 @@
 require_once dirname( __FILE__ ) . '/forminator-addon-rt-api.php';
 require_once dirname( __FILE__ ) . '/forminator-addon-rt-exception.php';
 
-final class Forminator_Addon_Rt extends Forminator_Addon_Abstract {
+final class Forminator_Addon_Rt extends Forminator_Integration {
 
 	private static $_instance = null;
 	protected $_slug = 'rt';
@@ -17,8 +17,11 @@ final class Forminator_Addon_Rt extends Forminator_Addon_Abstract {
 	protected $_image_x2 = '';
   protected $_position = 10;
 
-  protected $_form_settings = 'Forminator_Addon_Rt_Form_Settings';
-	protected $_form_hooks    = 'Forminator_Addon_Rt_Form_Hooks';
+  protected $_icon = '';
+  protected $_image = '';
+
+  protected $_form_settings = 'Forminator_Rt_Form_Settings';
+	protected $_form_hooks    = 'Forminator_Rt_Form_Hooks';
 
   protected $rtApiPath = 'REST/2.0';
   private static $_api = null;
@@ -78,6 +81,8 @@ final class Forminator_Addon_Rt extends Forminator_Addon_Abstract {
 
 		return $is_connected;
 	}
+
+
 
 	/**
 	 * Flag for check if and addon connected to a form(form settings suchs as list name completed)
@@ -394,11 +399,11 @@ final class Forminator_Addon_Rt extends Forminator_Addon_Abstract {
     );
     try {
       if ( ! $this->is_active() ) {
-        $activated = Forminator_Addon_Loader::get_instance()->activate_addon( $this->get_slug() );
+        $activated = Forminator_Integration_Loader::get_instance()->activate_addon( $this->get_slug() );
         if ( $activated ) {
           $template_params['is_active'] = true;
         } else {
-          $last_message = Forminator_Addon_Loader::get_instance()->get_last_error_message();
+          $last_message = Forminator_Integration_Loader::get_instance()->get_last_error_message();
           throw new Forminator_Addon_Rt_Exception( $last_message );
         }
       }

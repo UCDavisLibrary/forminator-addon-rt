@@ -9,7 +9,7 @@
  */
 
 
-define( 'FORMINATOR_ADDON_RT_VERSION', '1.2.0' );
+define( 'FORMINATOR_ADDON_RT_VERSION', '1.3.0' );
 
 function forminator_addon_rt_url() {
 	return trailingslashit( plugin_dir_url( __FILE__ ) );
@@ -28,8 +28,8 @@ function load_forminator_addon_rt() {
   require_once dirname( __FILE__ ) . '/includes/forminator-addon-rt.php';
   require_once dirname( __FILE__ ) . '/includes/forminator-addon-rt-form-settings.php';
   require_once dirname( __FILE__ ) . '/includes/forminator-addon-rt-form-hooks.php';
-  if ( class_exists( 'Forminator_Addon_Loader' ) ) {
-    Forminator_Addon_Loader::get_instance()->register( 'Forminator_Addon_Rt' );
+  if ( class_exists( 'Forminator_Integration_Loader' ) ) {
+    Forminator_Integration_Loader::get_instance()->register( 'Forminator_Addon_Rt' );
   }
 }
 

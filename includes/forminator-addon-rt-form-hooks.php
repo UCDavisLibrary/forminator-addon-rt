@@ -2,11 +2,12 @@
 
 require_once dirname( __FILE__ ) . '/forminator-addon-rt-api.php';
 
-class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstract {
+class Forminator_Rt_Form_Hooks extends Forminator_Integration_Form_Hooks {
 
   public $rt_api;
   public $form_settings;
   public $next_form_field;
+  public $_submit_form_error_message;
 
   /**
 	 * Forminator_Addon_Rt_Form_Hooks constructor.
@@ -18,7 +19,7 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
 	 *
 	 * @throws Forminator_Addon_Exception
 	 */
-	public function __construct( Forminator_Addon_Abstract $addon, $form_id ) {
+	public function __construct(  $addon, $form_id ) {
 		parent::__construct( $addon, $form_id );
 		$this->_submit_form_error_message = __( 'Failed to create an RT ticket for your form submission! Please try again later.', 'forminator' );
 
@@ -266,13 +267,13 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
     return $entry_items;
   }
 
-  public function on_export_render_title_row() {
-		$export_headers = array(
-			'ticket_id' => 'RT Ticket ID',
-		);
+  // public function on_export_render_title_row() {
+	// 	$export_headers = array(
+	// 		'ticket_id' => 'RT Ticket ID',
+	// 	);
 
-    return $export_headers;
-  }
+  //   return $export_headers;
+  // }
 
   public function on_export_render_entry( Forminator_Form_Entry_Model $entry_model, $addon_meta_data ) {
     $ticket_id = '';
