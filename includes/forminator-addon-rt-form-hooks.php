@@ -2,40 +2,31 @@
 
 require_once dirname( __FILE__ ) . '/forminator-addon-rt-api.php';
 
-class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstract {
+class Forminator_Rt_Form_Hooks extends Forminator_Integration_Form_Hooks {
 
   public $rt_api;
   public $form_settings;
   public $next_form_field;
 
-  /**
-	 * Forminator_Addon_Rt_Form_Hooks constructor.
-	 *
-	 * @since 1.0 Rt Addon
-	 *
-	 * @param Forminator_Addon_Abstract $addon
-	 * @param                           $form_id
-	 *
-	 * @throws Forminator_Addon_Exception
-	 */
-	public function __construct( Forminator_Addon_Abstract $addon, $form_id ) {
-		parent::__construct( $addon, $form_id );
-		$this->_submit_form_error_message = __( 'Failed to create an RT ticket for your form submission! Please try again later.', 'forminator' );
+
+	public function __construct( Forminator_Integration $addon, int $module_id ) {
+		parent::__construct( $addon, $module_id );
+		$this->submit_error_message = __( 'Failed to create an RT ticket for your form submission! Please try again later.', 'forminator' );
 
     $rt_host = $this->addon->get_rt_host();
     $rt_secret= $this->addon->get_rt_secret();
-    $form_settings = $this->form_settings_instance->get_form_settings_values();
+    $form_settings = $this->settings_instance->get_settings_values();
     $queue = isset($form_settings['queue']) ? $form_settings['queue'] : '';
     $this->rt_api = $this->addon->get_api($rt_host, $rt_secret, $queue);
     $this->form_settings = $form_settings;
 
 	}
 
-  public function on_form_submit( $submitted_data ) {
+  public function on_module_submit( $submitted_data ) {
     $addon_slug = $this->addon->get_slug();
-		$form_id = $this->form_id;
-    $form = $this->custom_form;
-    $form_fields = $this->form_settings_instance->get_form_fields();
+		$form_id = $this->module_id;
+    $form = $this->module;
+    $form_fields = $this->settings_instance->get_form_fields();
     $is_success = true;
 
     // get custom fields
@@ -61,10 +52,10 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
       if ( stripos( $field_type, 'postdata' ) !== false ) continue;
 
       if ( self::element_is_calculation( $element_id ) ) {
-        $formula = forminator_addon_replace_custom_vars( $form_field['formula'], $submitted_data, $this->custom_form, [], false );
+        $formula = forminator_addon_replace_custom_vars( $form_field['formula'], $submitted_data,$this->module, [], false );
         $field_value = eval( "return {$formula};");
       } else {
-        $field_value = forminator_addon_replace_custom_vars( '{' . $element_id . '}', $submitted_data, $this->custom_form, [], false );
+        $field_value = forminator_addon_replace_custom_vars( '{' . $element_id . '}', $submitted_data,$this->module, [], false );
       }
       $submitted_form[] = [
         'element_id' => $element_id,
@@ -95,7 +86,7 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
     try {
       # ticket subject
       $has_custom_subject = isset($this->form_settings['subject']) && !empty($this->form_settings['subject']);
-      $ticket_subject = $has_custom_subject ? forminator_addon_replace_custom_vars( $this->form_settings['subject'], $submitted_data, $this->custom_form, [], false ) : "New Submission from {$form->name}";
+      $ticket_subject = $has_custom_subject ? forminator_addon_replace_custom_vars( $this->form_settings['subject'], $submitted_data,$this->module, [], false ) : "New Submission from {$form->name}";
 
       # additional body content
       $additional_body_content = [];
@@ -130,12 +121,12 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
       $data = [
         'Subject' => $ticket_subject,
         'Content' => $this->rt_api->formToContent( $submitted_form, $additional_body_content ),
-        'Requestor' =>  $this->form_settings_instance->get_requestor_email( $submitted_form )
+        'Requestor' =>  $this->settings_instance->get_requestor_email( $submitted_form )
       ];
       if ( count($custom_fields) ){
         $data['CustomFields'] = $custom_fields;
       }
-      $data = apply_filters( 'forminator_addon_rt_ticket_data', $data, $this->custom_form, $submitted_form );
+      $data = apply_filters( 'forminator_addon_rt_ticket_data', $data,$this->module, $submitted_form );
       if ( is_string($data) ){
         return $data;
       } else if ( !is_array($data) ){
@@ -169,7 +160,7 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
     $next_field_id = $form_field['element_id'] . '-' . $next_field_num;
     if ( isset($submitted_data[$next_field_id]) ){
       $this->next_form_field[$form_field['element_id']] = $next_field_num + 1;
-      return forminator_addon_replace_custom_vars($submitted_data[$next_field_id], $submitted_data, $this->custom_form, [], false );
+      return forminator_addon_replace_custom_vars($submitted_data[$next_field_id], $submitted_data,$this->module, [], false );
     }
     return null;
   }
@@ -213,8 +204,8 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
 
   public function on_render_entry( Forminator_Form_Entry_Model $entry_model, $addon_meta_data ) {
     $addon_slug             = $this->addon->get_slug();
-		$form_id                = $this->form_id;
-		$form_settings_instance = $this->form_settings_instance;
+		$form_id                = $this->module_id;
+		$form_settings_instance = $this->settings_instance;
 
     $entry_items = array();
     foreach ( $addon_meta_data as $meta ) {
@@ -266,7 +257,7 @@ class Forminator_Addon_Rt_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstrac
     return $entry_items;
   }
 
-  public function on_export_render_title_row() {
+  public function on_export_render_title_row() : array {
 		$export_headers = array(
 			'ticket_id' => 'RT Ticket ID',
 		);

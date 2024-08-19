@@ -3,17 +3,13 @@
 /**
  * @description Displays wizard for setting up RT integration for a given form.
  */
-class Forminator_Addon_Rt_Form_Settings extends Forminator_Addon_Form_Settings_Abstract {
+class Forminator_Rt_Form_Settings extends Forminator_Integration_Form_Settings {
   protected $addon;
-
-  public function __construct( Forminator_Addon_Abstract $addon, $form_id ) {
-    parent::__construct( $addon, $form_id );
-  }
 
   /**
    * @description Set what displays in the form settings modal and in what order.
    */
-  public function form_settings_wizards() {
+  public function module_settings_wizards() {
 		// numerical array steps.
 		return array(
 			array(
@@ -32,7 +28,7 @@ class Forminator_Addon_Rt_Form_Settings extends Forminator_Addon_Form_Settings_A
    */
   public function pick_queue($submitted_data){
     $template = forminator_addon_rt_dir() . 'views/form-settings/pick-queue.php';
-    $settings = $this->get_form_settings_values();
+    $settings = $this->get_settings_values();
     $has_errors = false;
     $buttons = [];
     $is_close = false;
@@ -48,7 +44,7 @@ class Forminator_Addon_Rt_Form_Settings extends Forminator_Addon_Form_Settings_A
 				$template_params['queue_error'] = __( 'Please select a queue', 'forminator' );
 				$has_errors = true;
 			} else {
-        $this->save_form_settings_values(
+        $this->save_module_settings_values(
           array_merge(
             $settings,
             array(
@@ -60,18 +56,18 @@ class Forminator_Addon_Rt_Form_Settings extends Forminator_Addon_Form_Settings_A
     }
 
     if ( $this->is_form_settings_complete() ){
-      $buttons['disconnect']['markup'] = Forminator_Addon_Abstract::get_button_markup(
+      $buttons['disconnect']['markup'] = Forminator_Integration::get_button_markup(
 				esc_html__( 'Deactivate', 'forminator' ),
 				'sui-button-ghost sui-tooltip sui-tooltip-top-center forminator-addon-form-disconnect',
 				esc_html__( 'Deactivate this Rt Integration from this Form.', 'forminator' )
 			);
     }
     $buttons['next']['markup'] = '<div class="sui-actions-right">' .
-    Forminator_Addon_Abstract::get_button_markup( esc_html__( 'Next', 'forminator' ), 'forminator-addon-next' ) .
+    Forminator_Integration::get_button_markup( esc_html__( 'Next', 'forminator' ), 'forminator-addon-next' ) .
     '</div>';
 
     return array(
-			'html'       => Forminator_Addon_Abstract::get_template( $template, $template_params ),
+			'html'       => Forminator_Integration::get_template( $template, $template_params ),
 			'buttons'    => $buttons,
 			'redirect'   => false,
 			'has_errors' => $has_errors
@@ -85,7 +81,7 @@ class Forminator_Addon_Rt_Form_Settings extends Forminator_Addon_Form_Settings_A
   public function ticket_metadata($submitted_data){
     $template = forminator_addon_rt_dir() . 'views/form-settings/ticket-metadata.php';
     $is_submit  = ! empty( $submitted_data );
-    $settings = $this->get_form_settings_values();
+    $settings = $this->get_settings_values();
     $has_errors = false;
     $buttons = [];
     $is_close = false;
@@ -125,7 +121,7 @@ class Forminator_Addon_Rt_Form_Settings extends Forminator_Addon_Form_Settings_A
           );
         }
       }
-      $this->save_form_settings_values(
+      $this->save_module_settings_values(
         array_merge(
           $settings,
           array(
@@ -142,10 +138,10 @@ class Forminator_Addon_Rt_Form_Settings extends Forminator_Addon_Form_Settings_A
     }
 
     $buttons['next']['markup'] = '<div class="sui-actions-right">' .
-    Forminator_Addon_Abstract::get_button_markup( esc_html__( 'CONNECT', 'forminator' ), 'forminator-addon-next' ) .
+    Forminator_Integration::get_button_markup( esc_html__( 'CONNECT', 'forminator' ), 'forminator-addon-next' ) .
     '</div>';
     return array(
-      'html'       => Forminator_Addon_Abstract::get_template( $template, $template_params ),
+      'html'       => Forminator_Integration::get_template( $template, $template_params ),
       'buttons'    => $buttons,
       'redirect'   => false,
       'has_errors' => $has_errors,
@@ -155,12 +151,13 @@ class Forminator_Addon_Rt_Form_Settings extends Forminator_Addon_Form_Settings_A
   }
 
   public function pick_queue_is_completed(){
-    $settings = $this->get_form_settings_values();
+    $settings = $this->get_settings_values();
+    $p = array_key_exists('queue', $settings) && !empty($settings['queue']) ? 'true' : 'false';
     return array_key_exists('queue', $settings) && !empty($settings['queue']);
   }
 
   public function metadata_is_completed(){
-    $settings = $this->get_form_settings_values();
+    $settings = $this->get_settings_values();
     $has_requestor = array_key_exists('requestor', $settings) && !empty($settings['requestor']);
     return $has_requestor;
   }
@@ -170,7 +167,7 @@ class Forminator_Addon_Rt_Form_Settings extends Forminator_Addon_Form_Settings_A
   }
 
   public function get_queue(){
-    $settings = $this->get_form_settings_values();
+    $settings = $this->get_settings_values();
     $queue = '';
     if ( array_key_exists('queue', $settings) && !empty($settings['queue']) ){
       $queue = $settings['queue'];
@@ -182,7 +179,7 @@ class Forminator_Addon_Rt_Form_Settings extends Forminator_Addon_Form_Settings_A
    * @description Get the email address of the RT requestor for this form submission.
    */
   public function get_requestor_email($submitted_form=null){
-    $settings = $this->get_form_settings_values();
+    $settings = $this->get_settings_values();
     $email = '';
     if ( !array_key_exists('requestor', $settings) || empty($settings['requestor']) ){
       return $email;

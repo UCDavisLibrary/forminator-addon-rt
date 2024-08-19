@@ -3,27 +3,21 @@
 require_once dirname( __FILE__ ) . '/forminator-addon-rt-api.php';
 require_once dirname( __FILE__ ) . '/forminator-addon-rt-exception.php';
 
-final class Forminator_Addon_Rt extends Forminator_Addon_Abstract {
+final class Forminator_Addon_Rt extends Forminator_Integration {
 
-	private static $_instance = null;
+  protected static $instance = null;
 	protected $_slug = 'rt';
 	protected $_version = FORMINATOR_ADDON_RT_VERSION;
-	protected $_min_forminator_version = '1.1';
+	protected $_min_forminator_version = '1.34.1';
 	protected $_short_title = 'RT';
 	protected $_title = 'Request Tracker (RT)';
 	protected $_url = 'https://bestpractical.com/request-tracker';
-	protected $_full_path = __FILE__;
-	protected $_icon_x2 = '';
-	protected $_image_x2 = '';
   protected $_position = 10;
-
-  protected $_form_settings = 'Forminator_Addon_Rt_Form_Settings';
-	protected $_form_hooks    = 'Forminator_Addon_Rt_Form_Hooks';
 
   protected $rtApiPath = 'REST/2.0';
   private static $_api = null;
 
-	public function __construct() {
+  public function __construct() {
 		// late init to allow translation.
 		$this->_description                = __( 'Create RT tickets on form submission', 'forminator' );
 		$this->_activation_error_message   = __( 'Sorry but we failed to activate RT, don\'t hesitate to contact us', 'forminator' );
@@ -34,20 +28,15 @@ final class Forminator_Addon_Rt extends Forminator_Addon_Abstract {
 			'forminator'
 		);
 
-    $this->_icon = forminator_addon_rt_assets_url() . 'rt.png';
-    $this->_image = forminator_addon_rt_assets_url() . 'rt.png';
 	}
 
-	/**
-	 * @return self|null
-	 */
-	public static function get_instance() {
-		if ( is_null( self::$_instance ) ) {
-			self::$_instance = new self();
-		}
+  public function addon_path() : string  {
+    return forminator_addon_rt_url();
+  }
 
-		return self::$_instance;
-	}
+  public function assets_path() : string {
+    return forminator_addon_rt_assets_url();
+  }
 
 	/**
 	 * Flag for check if and addon connected (global settings suchs as api key complete)
@@ -79,58 +68,6 @@ final class Forminator_Addon_Rt extends Forminator_Addon_Abstract {
 		return $is_connected;
 	}
 
-	/**
-	 * Flag for check if and addon connected to a form(form settings suchs as list name completed)
-	 *
-	 * @param $form_id
-	 *
-	 * @return bool
-	 */
-	public function is_form_connected( $form_id ) {
-		try {
-			$form_settings_instance = null;
-			if ( ! $this->is_connected() ) {
-				throw new Forminator_Addon_Rt_Exception( __( ' Rt is not connected', 'forminator' ) );
-			}
-
-			$form_settings_instance = $this->get_addon_settings( $form_id, 'form' );
-			if ( ! $form_settings_instance instanceof Forminator_Addon_Rt_Form_Settings ) {
-				throw new Forminator_Addon_Rt_Exception( __( 'Invalid Form Settings of Rt', 'forminator' ) );
-			}
-
-			// Mark as active when there is at least one active connection.
-			if ( false === $form_settings_instance->is_form_settings_complete() ) {
-				throw new Forminator_Addon_Rt_Exception( __( 'No active Rt connection found in this form', 'forminator' ) );
-			}
-
-			$is_form_connected = true;
-
-		} catch ( Forminator_Addon_Rt_Exception $e ) {
-			$is_form_connected = false;
-		}
-
-		/**
-		 * Filter connected status of Rt with the form
-		 *
-		 * @since 1.0
-		 *
-		 * @param bool                                      $is_form_connected
-		 * @param int                                       $form_id                Current Form ID.
-		 * @param Forminator_Addon_Rt_Form_Settings|null $form_settings_instance Instance of form settings, or null when unavailable.
-		 *
-		 */
-		$is_form_connected = apply_filters( 'forminator_addon_rt_is_form_connected', $is_form_connected, $form_id, $form_settings_instance );
-
-		return $is_form_connected;
-	}
-
-  public function get_api( $rt_host='', $rt_secret='', $queue='' ) {
-		if ( is_null( self::$_api ) ) {
-			self::$_api = new Forminator_Addon_Rt_Api( $rt_host, $rt_secret, $queue );
-		}
-
-		return self::$_api;
-	}
 
   public function is_settings_available() {
 		return true;
@@ -139,7 +76,7 @@ final class Forminator_Addon_Rt extends Forminator_Addon_Abstract {
 	/**
 	 * Settings wizard
 	 *
-	 * @since 1.0 Slack Addon
+	 * @since 1.0 rt Addon
 	 * @return array
 	 */
 	public function settings_wizards() {
@@ -428,7 +365,6 @@ final class Forminator_Addon_Rt extends Forminator_Addon_Abstract {
 		return false;
   }
 
-
   /**
 	 * Get RT host
 	 *
@@ -525,4 +461,13 @@ final class Forminator_Addon_Rt extends Forminator_Addon_Abstract {
 
 		return $settings;
 	}
+
+  public function get_api( $rt_host='', $rt_secret='', $queue='' ) {
+		if ( is_null( self::$_api ) ) {
+			self::$_api = new Forminator_Addon_Rt_Api( $rt_host, $rt_secret, $queue );
+		}
+
+		return self::$_api;
+	}
+
 }
