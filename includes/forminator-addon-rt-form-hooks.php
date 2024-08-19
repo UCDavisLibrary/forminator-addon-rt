@@ -363,7 +363,7 @@ class Forminator_Rt_Form_Hooks extends Forminator_Integration_Form_Hooks {
       }));
       $rt_payload['ContentType'] = 'text/html';
     }
-    $r = $this->rt_api->createComment( $lastTicket['id'], $rt_payload );
+    $r = $this->rt_api->createComment( $lastTicket['id'], $rt_payload, true );
     $is_success = $this->rt_api->responseIsSuccess($r, 201);
     if ( $is_success ) {
       $out['commentCreated'] = true;
@@ -375,7 +375,7 @@ class Forminator_Rt_Form_Hooks extends Forminator_Integration_Form_Hooks {
     $out['error'] = true;
     $rt_payload['Content'] = $this->rt_api->formatFailedAttachments($uploads);
     $rt_payload['ContentType'] = 'text/html';
-    $r = $this->rt_api->createComment( $lastTicket['id'], $rt_payload );
+    $r = $this->rt_api->createComment( $lastTicket['id'], $rt_payload, true );
     $is_success = $this->rt_api->responseIsSuccess($r, 201);
     if ( $is_success ) {
       $out['commentCreated'] = true;

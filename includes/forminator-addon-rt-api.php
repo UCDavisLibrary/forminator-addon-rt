@@ -31,6 +31,10 @@ class Forminator_Addon_Rt_Api {
     return trailingslashit($this->postTicketUrl()) . $id . '/comment';
   }
 
+  public function postCorrespondenceUrl($id){
+    return trailingslashit($this->postTicketUrl()) . $id . '/correspond';
+  }
+
   public function createTicket($data=[]){
     if ( !array_key_exists('Queue', $data) || empty($data['Queue']) ) {
       $data['Queue'] = $this->defaultQueue;
@@ -51,14 +55,21 @@ class Forminator_Addon_Rt_Api {
     return $r;
   }
 
-  public function createComment($ticket_id, $data ){
+  /**
+   * Create a comment (or correspondence) on a ticket
+   * @param int $ticket_id
+   * @param array $data - the payload to send to the RT API (will be json encoded)
+   * @param bool $public - whether the comment should be "public" (aka viewable by the requester) or not.
+   * If public, is a correspondence, otherwise is a comment.
+   */
+  public function createComment($ticket_id, $data, $public=false ){
 
     if ( !array_key_exists('ContentType', $data) || empty($data['ContentType']) ) {
       $data['ContentType'] = 'text/html';
     }
 
     $r = wp_remote_post(
-      $this->postCommentUrl($ticket_id),
+      $public ? $this->postCorrespondenceUrl($ticket_id) : $this->postCommentUrl($ticket_id),
       ['headers' => ['Authorization' => 'token ' . $this->secret, 'Content-Type' => 'application/json' ],
        'body' => wp_json_encode($data),
        'blocking'    => true,
