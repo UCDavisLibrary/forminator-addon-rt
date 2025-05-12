@@ -331,11 +331,11 @@ final class Forminator_Addon_Rt extends Forminator_Integration {
     );
     try {
       if ( ! $this->is_active() ) {
-        $activated = Forminator_Addon_Loader::get_instance()->activate_addon( $this->get_slug() );
+        $activated = Forminator_Integration_Loader::get_instance()->activate_addon( $this->get_slug() );
         if ( $activated ) {
           $template_params['is_active'] = true;
         } else {
-          $last_message = Forminator_Addon_Loader::get_instance()->get_last_error_message();
+          $last_message = Forminator_Integration_Loader::get_instance()->get_last_error_message();
           throw new Forminator_Addon_Rt_Exception( $last_message );
         }
       }
