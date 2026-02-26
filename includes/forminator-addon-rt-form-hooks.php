@@ -11,7 +11,7 @@ class Forminator_Rt_Form_Hooks extends Forminator_Integration_Form_Hooks {
 
 	public function __construct( Forminator_Integration $addon, int $module_id ) {
 		parent::__construct( $addon, $module_id );
-		$this->submit_error_message = __( 'Failed to create an RT ticket for your form submission! Please try again later.', 'forminator' );
+		$this->submit_error_message = __( 'Failed to create a ticket for your form submission! Please try again later.', 'forminator' );
 
     $rt_host = $this->addon->get_rt_host();
     $rt_secret= $this->addon->get_rt_secret();
@@ -130,7 +130,7 @@ class Forminator_Rt_Form_Hooks extends Forminator_Integration_Form_Hooks {
       if ( is_string($data) ){
         return $data;
       } else if ( !is_array($data) ){
-        return $this->_submit_form_error_message;
+        return $this->submit_error_message;
       }
       $r = $this->rt_api->createTicket($data);
       $is_success = $this->rt_api->responseIsSuccess($r, 201);
@@ -140,7 +140,7 @@ class Forminator_Rt_Form_Hooks extends Forminator_Integration_Form_Hooks {
       forminator_addon_maybe_log( __METHOD__, $th->getMessage() );
     }
     if ( $is_success === false ) {
-      $is_success = $this->_submit_form_error_message;
+      $is_success = $this->submit_error_message;
     }
 
     return $is_success;
