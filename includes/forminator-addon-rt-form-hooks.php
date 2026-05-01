@@ -169,7 +169,6 @@ class Forminator_Rt_Form_Hooks extends Forminator_Integration_Form_Hooks {
    * @description - Fires after a form is submitted and RT ticket is created.
    * We use this to add the RT ticket id to the entry meta data.
    * And to send any uploads as a separate as attachments in an comment to RT ticket.
-   * Not ideal, but I couldn't figure out how to do it from the submission hook.
    */
   public function add_entry_fields( $submitted_data, $form_entry_fields = array(), $entry = null ) {
     $out = [];
@@ -184,6 +183,13 @@ class Forminator_Rt_Form_Hooks extends Forminator_Integration_Form_Hooks {
       return $out;
     } else {
       $entry_field['value'] = $lastTicket;
+    }
+
+    if ( isset($lastTicket['Requestor'][0]['id'])){
+      $out[] = [
+        'name' => 'rt_requestor_id',
+        'value' => $lastTicket['Requestor'][0]['id']
+      ];
     }
 
     $uploads = $this->get_uploads( $form_entry_fields );
