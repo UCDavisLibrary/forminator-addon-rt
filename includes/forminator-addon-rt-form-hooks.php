@@ -192,7 +192,7 @@ class Forminator_Rt_Form_Hooks extends Forminator_Integration_Form_Hooks {
       ];
     }
 
-    $uploads = $this->get_uploads( $form_entry_fields );
+    $uploads = $this->get_uploads( $entry );
     if ( !count( $uploads ) ) {
       $out[] = $entry_field;
       return $out;
@@ -391,12 +391,19 @@ class Forminator_Rt_Form_Hooks extends Forminator_Integration_Form_Hooks {
 
 	/**
 	 * Get uploads to be added as attachments
+	 * As of Forminator 1.58, addons receive an empty field list, so uploads are read from the saved entry instead.
+	 * @param Forminator_Form_Entry_Model|null $entry - the saved form entry
+	 * @return array - upload urls
 	 */
-	private function get_uploads( $fields ) {
+	private function get_uploads( $entry ) {
 		$uploads = array();
 
-		foreach ( $fields as $i => $val ) {
-			if ( 0 === stripos( $val['name'], 'upload-' ) ) {
+		if ( ! $entry instanceof Forminator_Form_Entry_Model || empty( $entry->meta_data ) ) {
+			return $uploads;
+		}
+
+		foreach ( $entry->meta_data as $name => $val ) {
+			if ( 0 === stripos( $name, 'upload-' ) ) {
 				if ( ! empty( $val['value'] ) ) {
 					$file_url = $val['value']['file']['file_url'];
 
